@@ -48,49 +48,69 @@
     <?php endif; ?>
 
     <!-- Main Content -->
-        <!-- Container Fluid -->
-        <div class="container-fluid mt-5">
-            <!--row-->
-            <div class="row">
-                <!--Col-3-->
-                <div class="col-3">
-                    <input type="text" class="form-control" id="search-input" placeholder="Search Product">
+    <!-- Container -->
+    <div class="container mt-5">
+        <!--row-->
+        <div class="row">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="category-select" class="form-label">Filter by Category:</label>
+                    <select class="form-select" id="category-select">
+                        <option value="">View All</option>
+                        <option value="makanan">Makanan</option>
+                        <option value="minuman">Minuman</option>
+                    </select>
                 </div>
-                <!--/col-3-->
-                <!--col-9-->
-                <div class="col-9" id="myCards">
-                    <!--row-->
-                    <div class="row mb-3">
-                        <?php if(!empty($getItem)):?>
-                            <?php foreach($getItem as $item): ?>
-                            <!--col-4-->
-                            <div class="col-4">
-                                <!--Card-->
-                                <div class="card mb-4" style="width: 18rem; height: 50vh; display: flex;">
-                                    <img src="<?= esc($item['img']) ?>" class="card-img-top" alt="..." style="max-height:20vh;">
-                                    <div class="card-body d-flex flex-column">
-                                        <h4 class="card-title"><?= esc($item['category']) ?></h4>
-                                        <h5 class="card-text">Rp. <?= esc($item['price']) ?></h5>
-                                        <h6 class="card-text">Stok : <?= esc($item['stock']) ?>
-                                        </h6>
-                                        <p class="card-text d-inline-block text-truncate"><?= esc($item['name_item']) ?>
-                                        </p>
-                                        <a type="button" class="btn btn-primary mt-auto" data-bs-toggle="modal" data-bs-target="#detailItem<?= $item['uuid'] ?>">View Detail</a>
+                <div class="col-md-8">
+                    <label for="search-input" class="form-label">Search by Item Name:</label>
+                    <input type="text" class="form-control" id="search-input" placeholder="Enter item name">
+                </div>
+            </div>
+            <div class="row">
+            <?php if(!empty($getItem)): ?>
+                <?php foreach($getItem as $item): ?>
+                <div class="col-6 filter-item" id="myCards" category="<?= esc($item['category']) ?>" name="<?= esc($item['name_item']) ?>">
+                    <div class="card mb-3 mt-3">
+                        <div class="row g-0">
+                            <div class="col-md-5">
+                                <img src="<?= esc($item['img']) ?>" class="card-img" alt="<?= esc($item['name_item']) ?>" style="max-height:27.5vh; height:27.5vh" width="100vh">
+                            </div>
+                            <div class="col-md-7">
+                                <div class="card-body">
+                                    <h5 class="card-title"><?= esc($item['name_item']) ?></h5>
+                                    <p class="card-text">Stock: <?= esc($item['stock']) ?></p>
+                                    <p class="card-text">Price: Rp.<?= esc($item['price']) ?></p>
+                                    <p class="card-text">
+                                        <strong>Created by : <?= esc($item['umkm']) ?></strong>
+                                    </p>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <span class="badge bg-danger"><?= esc($item['category']) ?></span>
+                                            <?php if(session()->get('is_logged_in') == true): ?>
+                                                <?php if($item['umkm'] == $_SESSION['umkm']): ?>
+                                                    <span class="badge bg-success">My Item</span>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="col-6">
+                                            <a type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#detailItem<?= $item['uuid'] ?>">View Details</a>
+                                        </div>
                                     </div>
                                 </div>
-                                <!--/card-->
                             </div>
-                            <!--/col-4-->
-                            <?php endforeach; ?>
-                        <?php endif; ?>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                        </div>
                     </div>
-                    <!--/row-->
                 </div>
-                <!--/col-9-->
+                <?php endforeach; ?>
+            <?php endif; ?>
             </div>
-            <!--/row-->
+            <!--/col-9-->
         </div>
-        <!-- /Container -->
+        <!--/row-->
+    </div>
+    <!-- /Container -->
     <!-- /main content -->
 
 
@@ -100,7 +120,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="registerModalLabel">Create UMKM</h5>
+                <h5 class="modal-title" id="registerModalLabel">Fill the Form</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -199,27 +219,42 @@
 </div>
 <?php endforeach; ?>
 
-
-<!--Custom JS-->
 <script>
-    const searchInput = document.getElementById('search-input');
-    searchInput.addEventListener('input', handleSearch);
+    //Filter Category and Search by Item Name
+    const categorySelect = document.querySelector('#category-select');
+    const filterItems = document.querySelectorAll('.filter-item');
+    const searchInput = document.querySelector('#search-input');
 
-    function handleSearch() {
-        const searchValue = this.value.toLowerCase();
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-            const title = card.querySelector('.card-title').textContent.toLowerCase();
-            if (searchValue === '' || title.includes(searchValue)) {
-                card.style.display = 'block';
+    const filterItemsByCategoryAndSearch = () => {
+        const selectedCategory = categorySelect.value.toLowerCase();
+        const searchValue = searchInput.value.toLowerCase();
+
+        filterItems.forEach(item => {
+            const category = item.getAttribute('category').toLowerCase();
+            const itemName = item.getAttribute('name').toLowerCase();
+
+            if ((selectedCategory === '' || selectedCategory === category) && itemName.includes(searchValue)) {
+                item.style.display = 'block';
             } else {
-                card.style.display = 'none';
+                item.style.display = 'none';
             }
         });
-    }
+    };
 
+    //Filter Category
+    categorySelect.addEventListener('change', () => {
+        filterItemsByCategoryAndSearch();
+    });
+
+    //Search by Item Name
+    searchInput.addEventListener('input', () => {
+        filterItemsByCategoryAndSearch();
+    });
 </script>
 
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"

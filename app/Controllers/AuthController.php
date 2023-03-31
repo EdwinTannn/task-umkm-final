@@ -11,13 +11,19 @@ class AuthController extends BaseController
     public function index()
     {
         $itemModel = new ItemModel();
-        $getItem = $itemModel->findAll();
+        $category = $this->request->getGet('category'); // Get the category from the query string
+        if (!empty($category)) {
+            $getItem = $itemModel->where('category', $category)->findAll(); // Filter items by category
+        } else {
+            $getItem = $itemModel->findAll(); // Get all items
+        }
         helper(['form']);
         $data = [
             'getItem' => $getItem,
         ];
         return view('/index', $data);
     }
+    
 
     public function register_post() {
         $email = $this->request->getVar('email');
